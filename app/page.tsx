@@ -25,6 +25,7 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 export default function Home() {
  const [menu, setMenu] = useState(false);
+ const [scrolled, setScrolled] = useState(false);
  const [modal, setModal] = useState<'login' | 'plan' | 'trainer' | null>(null);
  const [trainer, setTrainer] = useState('Spēka treniņi');
  const [bookingMessage, setBookingMessage] = useState('');
@@ -55,13 +56,14 @@ export default function Home() {
  }, []);
  useEffect(() => { const d=dialogRef.current; if(modal) { previousFocus.current=document.activeElement as HTMLElement; d?.showModal(); } else { d?.close(); previousFocus.current?.focus(); } }, [modal]);
  useEffect(() => {document.body.style.overflow=menu || modal ? 'hidden' : ''; return () => {document.body.style.overflow='';};}, [menu, modal]);
+ useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 40); onScroll(); window.addEventListener('scroll', onScroll, {passive:true}); return () => window.removeEventListener('scroll', onScroll); }, []);
  const openLogin = () => {setMessage('');setModal('login');setMenu(false);};
  const choosePlan = (plan: Plan) => {setSelected(plan);setModal('plan');};
  const showDemo = () => {setModal(null);setDashboard(true);window.scrollTo(0,0);};
  const signIn = async (e: React.FormEvent) => {e.preventDefault();if(!supabase) {setMessage('Pieslēgšanās būs pieejama, kad atvērsim reģistrāciju. Tikmēr apskati profila paraugu.');return;} setBusy(true); const {error}=await supabase.auth.signInWithOtp({email, options:{emailRedirectTo:window.location.origin}});setMessage(error ? 'Neizdevās nosūtīt saiti. Lūdzu, mēģini vēlreiz.' : 'Pārbaudi savu e-pastu, nosūtījām drošu pieslēgšanās saiti.');setBusy(false);};
  return <>
   <div className="announcement"><span>-20% atlaide skolēniem</span><a href="#abonementi" onClick={()=>setDashboard(false)}>Apskatīt abonementus <ArrowUpRight size={13}/></a></div>
-  <header className="header"><a href="#" className="brand" onClick={()=>setDashboard(false)} aria-label="GYM82 sākumlapa"><img src="/assets/logo-white.svg" alt="GYM82"/></a>
+  <header className={`header${scrolled ? ' is-scrolled' : ''}`}><a href="#" className="brand" onClick={()=>setDashboard(false)} aria-label="GYM82 sākumlapa"><img src="/assets/logo-white.svg" alt="GYM82"/></a>
    <nav className="nav" aria-label="Galvenā navigācija">{[['Par mums','par-mums'],['Abonementi','abonementi'],['Treneri','treneri'],['Jautājumi','buj']].map(([label,id])=><a key={id} href={`#${id}`} onClick={()=>{setDashboard(false);setMenu(false);}}>{label}</a>)}</nav>
    <div className="header-actions"><button aria-label="Mans profils" className="login-link" onClick={()=>accountEmail ? setDashboard(true) : openLogin()}><UserRound size={16}/><span>Mans profils</span></button><a className="btn small" href="#abonementi" onClick={()=>setDashboard(false)}>Iegādāties abonementu <ArrowUpRight size={16}/></a><button className="menu-button" aria-label={menu?'Aizvērt izvēlni':'Atvērt izvēlni'} aria-expanded={menu} aria-controls="mobile-menu" onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button></div>
   </header>
