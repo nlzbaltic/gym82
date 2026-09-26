@@ -24,3 +24,14 @@
 html{scroll-padding-top:96px}
 @media(max-width:760px){.header.is-scrolled{height:72px}.header.is-scrolled .brand img{width:50px;height:50px}.header.is-scrolled .login-link{min-height:42px}html{scroll-padding-top:84px}}
 @media(prefers-reduced-motion:reduce){.header,.header .brand img{transition:none}}
+
+/* Profile details */
+.profile-details{margin-top:25px;padding:32px;background:var(--surface);border:1px solid var(--line);border-radius:15px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px}
+.profile-details h2{margin:0 0 10px}
+.profile-form{display:grid;gap:10px}
+.profile-form>label{position:static;display:block;border:0;padding:0;margin:6px 0 0;font-size:14px;color:var(--text)}
+.profile-form input:not([type=checkbox]){width:100%;padding:14px 16px;background:#11140f;color:#fff;border:1px solid #505748;border-radius:7px}
+.profile-form .profile-check{display:flex;align-items:center;gap:12px;margin-top:10px;cursor:pointer}
+.profile-check input{width:20px;height:20px;accent-color:var(--green);flex-shrink:0}
+.profile-form .btn{margin-top:10px;justify-self:start}
+@media(max-width:760px){.profile-details{grid-template-columns:1fr;gap:20px;padding:25px}.profile-form .btn{justify-self:stretch}}

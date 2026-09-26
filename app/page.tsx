@@ -34,13 +34,17 @@ export default function Home() {
  const [dashboard, setDashboard] = useState(false);
  const [email, setEmail] = useState('');
  const [accountEmail, setAccountEmail] = useState<string | null>(null);
+ const [accountId, setAccountId] = useState<string | null>(null);
+ const [profile, setProfile] = useState({full_name:'', phone:'', is_student:false});
+ const [profileMessage, setProfileMessage] = useState('');
+ const [profileBusy, setProfileBusy] = useState(false);
  const [message, setMessage] = useState('');
  const [busy, setBusy] = useState(false);
  const [faq, setFaq] = useState<number | null>(0);
  const menuRef = useRef<HTMLDialogElement>(null);
  const dialogRef = useRef<HTMLDialogElement>(null);
  const previousFocus = useRef<HTMLElement | null>(null);
- useEffect(() => { if (!supabase) return; const {data:{subscription}} = supabase.auth.onAuthStateChange((_event, session) => { setAccountEmail(session?.user.email ?? null); if(session) {setDashboard(true); setModal(null);} }); return () => subscription.unsubscribe(); }, []);
+ useEffect(() => { if (!supabase) return; const {data:{subscription}} = supabase.auth.onAuthStateChange((_event, session) => { setAccountEmail(session?.user.email ?? null); setAccountId(session?.user.id ?? null); if(session) {setDashboard(true); setModal(null);} }); return () => subscription.unsubscribe(); }, []);
  useEffect(() => {
   const drawer = menuRef.current;
   if (menu) { drawer?.showModal(); return; }
@@ -57,6 +61,22 @@ export default function Home() {
  useEffect(() => { const d=dialogRef.current; if(modal) { previousFocus.current=document.activeElement as HTMLElement; d?.showModal(); } else { d?.close(); previousFocus.current?.focus(); } }, [modal]);
  useEffect(() => {document.body.style.overflow=menu || modal ? 'hidden' : ''; return () => {document.body.style.overflow='';};}, [menu, modal]);
  useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 40); onScroll(); window.addEventListener('scroll', onScroll, {passive:true}); return () => window.removeEventListener('scroll', onScroll); }, []);
+ useEffect(() => {
+  if (!supabase || !accountId) return;
+  let active = true;
+  supabase.from('profiles').select('full_name, phone, is_student').eq('id', accountId).maybeSingle().then(({data}) => {
+   if (active && data) setProfile({full_name: data.full_name ?? '', phone: data.phone ?? '', is_student: !!data.is_student});
+  });
+  return () => { active = false; };
+ }, [accountId]);
+ const saveProfile = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!supabase || !accountId) return;
+  setProfileBusy(true); setProfileMessage('');
+  const {error} = await supabase.from('profiles').update({full_name: profile.full_name.trim(), phone: profile.phone.trim(), is_student: profile.is_student}).eq('id', accountId);
+  setProfileMessage(error ? 'Neizdevās saglabāt. Lūdzu, mēģini vēlreiz.' : 'Dati saglabāti.');
+  setProfileBusy(false);
+ };
  const openLogin = () => {setMessage('');setModal('login');setMenu(false);};
  const choosePlan = (plan: Plan) => {setSelected(plan);setModal('plan');};
  const showDemo = () => {setModal(null);setDashboard(true);window.scrollTo(0,0);};
@@ -77,6 +97,7 @@ export default function Home() {
    <div className="dashboard-top"><button className="text-button" onClick={()=>setDashboard(false)}><ChevronLeft size={16}/> Atpakaļ uz sākumu</button><span className="eyebrow">{accountEmail?'Mans profils':'Profila priekšskatījums'}</span></div>
    <div className="section-heading"><div><h1>Pārvaldi savu abonementu un treniņus.</h1><p className="muted">{accountEmail || 'Iepazīsti savu nākamo treniņu sabiedroto.'}</p></div>{accountEmail&&<button className="text-button" onClick={async()=>{await supabase?.auth.signOut();setDashboard(false);}}><LogOut size={16}/> Iziet</button>}</div>
    <div className="dashboard-grid"><article className="member-card"><span className="eyebrow">Dalībnieka karte</span><Dumbbell className="card-symbol"/><div><p className="muted">Tavs abonements</p><h2>Izvēlies abonementu saviem treniņiem.</h2></div><div className="card-bottom"><span className="status">Nav aktīva abonementa</span><a href="#profile-plans" className="round-link" aria-label="Iegādāties abonementu"><ArrowUpRight/></a></div></article><article className="access-card"><span className="icon-box"><LockKeyhole/></span><h2>Atver zāles durvis ar savu telefonu.</h2><p>Ar aktīvu abonementu atver durvis tieši savā profilā.</p><button className="btn disabled" disabled><LockKeyhole size={16}/> Drīzumā pieejams</button><small>Funkcija būs pieejama pēc durvju sistēmas uzstādīšanas.</small></article></div>
+   {accountEmail&&<section className="profile-details"><div><h2>Mani dati</h2><p className="muted">Norādi savu vārdu un telefonu, lai varam sazināties par abonementu un treniņiem.</p></div><form className="profile-form" onSubmit={saveProfile}><label htmlFor="profile-name">Vārds un uzvārds</label><input id="profile-name" autoComplete="name" maxLength={120} value={profile.full_name} onChange={e=>setProfile({...profile, full_name:e.target.value})}/><label htmlFor="profile-phone">Telefona numurs</label><input id="profile-phone" type="tel" autoComplete="tel" maxLength={30} placeholder="+371" value={profile.phone} onChange={e=>setProfile({...profile, phone:e.target.value})}/><label className="profile-check"><input type="checkbox" checked={profile.is_student} onChange={e=>setProfile({...profile, is_student:e.target.checked})}/><span>Esmu skolēns un vēlos pieteikties 20% atlaidei</span></label><button className="btn" disabled={profileBusy}>{profileBusy?'Saglabā…':'Saglabāt'}</button><p className="form-message" role="status">{profileMessage}</p></form></section>}
    <div id="profile-plans" className="profile-plans"><h2>Izvēlies savu nākamo soli.</h2><p className="muted">Izvēlies savu treniņu ritmu. Pirkumi drīzumā.</p><div className="plans">{plans.map(plan=><PlanCard key={plan.name} plan={plan} onChoose={choosePlan}/>)}</div></div>
   </main> : <main>
    <section className="hero"><div className="hero-photo"/><div className="hero-shade"/><div className="hero-content"><h1>Mūsdienīgs fitnesa klubs <span>Smiltenē</span></h1><p>Trenējies savā tempā ar visu nepieciešamo, lai justos labāk un kļūtu stiprāks.</p><div className="hero-actions"><a href="#abonementi" className="btn">Iegādāties abonementu <ArrowUpRight size={18}/></a><button className="btn outline" onClick={()=>choosePlan(plans[0])}>Bezmaksas izmēģinājuma treniņš <ArrowUpRight size={18}/></button></div></div></section>

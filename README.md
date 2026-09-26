@@ -40,3 +40,9 @@ Confirm membership validity and Full hours, actual address, gym photos and train
 - Added a student discount announcement, prominent mobile profile button and expanded footer.
 - Three trainer cards use the user-supplied temporary name Jānis and +371 22 33 44 55. Replace these with confirmed details before launch.
 - Trainer form validates contact details and requested date/time, prepares an editable-by-form WhatsApp message and offers a telephone link. A reservation is not confirmed automatically; the customer sends the message in WhatsApp and agrees on availability with the trainer. No booking data is stored by this preview.
+
+## Supabase
+
+- Project: GYM82 (eu-west-2), linked to GitHub `nlzbaltic/gym82`. Migrations in `supabase/migrations/` run on push to `main`.
+- `profiles` table: created automatically on sign-up; RLS lets each user read and edit only their own name, phone and student flag.
+- Cloudflare build variables required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
