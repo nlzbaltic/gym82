@@ -7,3 +7,4 @@ out/
 .sites-runtime/
 .DS_Store
 * 2.*
+.wrangler/
