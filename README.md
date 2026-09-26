@@ -14,7 +14,7 @@ The current preview exports static files to `out/`. Deployment identity lives in
 
 ## Current scope
 
-- Free workout: €0; Day: €24.95 / 12 visits, 05:00–13:00; Full: €34.95 / 16 visits; Ultra: €44.95 / unlimited, 05:00–24:00.
+- Pirmais solis: €0 (free workout); Rīts: €24.95 / 12 visits, 05:00–13:00; Aktīvais: €34.95 / 16 visits; Ultra: €44.95 / unlimited, 05:00–24:00.
 - Validity period and Full plan access hours are deliberately unspecified until confirmed.
 - All four membership detail dialogs and the profile preview work. No purchase, active membership, door access, or persisted account data is simulated.
 - Supabase magic-link authentication is implemented conditionally. Add public project URL and anon key from `.env.example`, and configure the exact production origin in Supabase Auth redirect URLs. Supabase is not connected or end-to-end tested yet.
@@ -46,3 +46,5 @@ Confirm membership validity and Full hours, actual address, gym photos and train
 - Project: GYM82 (eu-west-2), linked to GitHub `nlzbaltic/gym82`. Migrations in `supabase/migrations/` run on push to `main`.
 - `profiles` table: created automatically on sign-up; RLS lets each user read and edit only their own name, phone and student flag.
 - Cloudflare build variables required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Auth: email + password (sign up with name, sign in, password reset via email link). Supabase Auth → Minimum password length should be 8.
+- `visits` table: one row per door opening, written only server-side (future door Edge Function with service role). `my_visit_stats()` returns trainings in the last year (distinct Riga days) and the last visit for the member dashboard.
