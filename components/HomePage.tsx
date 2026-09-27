@@ -1,0 +1,47 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowUpRight, Plus, Minus, X, Dumbbell, Clock3, Smartphone, UserRound, ShieldCheck } from 'lucide-react';
+import { useAuth } from './AuthProvider';
+import { PlanCarousel } from './PlanCards';
+import { plans, type Plan } from '@/lib/plans';
+
+const faqs = [
+ ['Kā iegādāties abonementu?', 'Izvēlies abonementu, izveido profilu un aktivizē abonementu savā profilā. Tiešsaistes maksājumus pieslēgsim drīzumā.'],
+ ['Vai varu trenēties, ja esmu iesācējs?', 'Protams. Sāc savā tempā un ar sev piemērotu slodzi. Vari pieteikties pie trenera, lai apgūtu vingrinājumu tehniku un izvēlētos piemērotu slodzi.'],
+ ['Kas jāņem līdzi uz treniņu?', 'Ērts sporta apģērbs, tīri maiņas apavi, dvielis un ūdens pudele. Pārējais, tava vēlme kustēties.'],
+ ['Kā darbojas ieeja ar telefonu?', 'Ar aktīvu abonementu zāles durvis atver ar pogu savā profilā. Katra diena, kad atver durvis, tiek uzskaitīta kā treniņš. Durvju sistēmu pieslēgsim pirms atvēršanas.'],
+ ['Kur atrodas sporta zāle un kāds ir darba laiks?', 'Sporta zāles darba laiks ir 05:00–24:00. Ieejas laiks atkarīgs no izvēlētā abonementa. Precīzu adresi izziņosim pirms atvēršanas.'],
+];
+
+export function HomePage() {
+ const router = useRouter();
+ const { user } = useAuth();
+ const [modal, setModal] = useState(false);
+ const [trainer, setTrainer] = useState('Spēka treniņi');
+ const [bookingMessage, setBookingMessage] = useState('');
+ const [bookingDraft, setBookingDraft] = useState('');
+ const [faq, setFaq] = useState<number | null>(0);
+ const dialogRef = useRef<HTMLDialogElement>(null);
+ const previousFocus = useRef<HTMLElement | null>(null);
+ useEffect(() => { const d = dialogRef.current; if (modal) { previousFocus.current = document.activeElement as HTMLElement; d?.showModal(); } else { d?.close(); previousFocus.current?.focus(); } }, [modal]);
+ useEffect(() => { document.body.style.overflow = modal ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [modal]);
+ const choosePlan = (plan: Plan) => router.push(user ? `/mans-profils?abonements=${plan.slug}` : `/registracija?abonements=${plan.slug}`);
+ return <>
+  <main>
+   <section className="hero"><div className="hero-photo"/><div className="hero-shade"/><div className="hero-content"><h1>Mūsdienīgs fitnesa klubs <span>Smiltenē</span></h1><p>Trenējies savā tempā ar visu nepieciešamo, lai justos labāk un kļūtu stiprāks.</p><div className="hero-actions"><a href="#abonementi" className="btn">Iegādāties abonementu <ArrowUpRight size={18}/></a><button className="btn outline" onClick={()=>choosePlan(plans[0])}>Bezmaksas izmēģinājuma treniņš <ArrowUpRight size={18}/></button></div></div></section>
+   <div className="ticker" aria-label="Spēks, disciplīna, izturība, rezultāts"><div className="ticker-track" aria-hidden="true">{[0,1,2,3].map(copy=><div className="ticker-group" key={copy}>{['Spēks','Disciplīna','Izturība','Rezultāts'].map(word=><span className="ticker-word" key={word}>{word}<svg className="ticker-separator" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.5v19M2.5 12h19M5.3 5.3l13.4 13.4M18.7 5.3 5.3 18.7" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round"/></svg></span>)}</div>)}</div></div>
+   <section className="section about" id="par-mums"><div className="section-heading"><div><h2>Šeit atradīsi visu, kas vajadzīgs <span className="muted">taviem treniņiem.</span></h2></div><p className="section-intro">Plaša treniņu zona, brīvie svari un trenažieri gan pirmajiem treniņiem, gan pieredzējušiem sportotājiem.</p></div><div className="about-grid"><div className="gym-visual"><img src="/assets/gym.jpg" alt="Sporta zāles brīvo svaru zona, ilustratīvs attēls"/><div className="image-label"><span>Vieta tavam nākamajam līmenim</span><ArrowUpRight/></div></div><div className="features">{[[Dumbbell,'Viss, kas vajadzīgs spēkam.','Brīvie svari, trenažieri un vieta funkcionāliem treniņiem.'],[Clock3,'Trenējies savā ritmā.','Izvēlies abonementu, kas iederas tavā ikdienā.'],[Smartphone,'Pārvaldi abonementu savā telefonā.','Abonements un tā informācija vienuviet, tavā profilā.']].map(([Icon,title,desc],i)=>{const I=Icon as typeof Dumbbell;return <article className="feature" key={i}><span className="icon-box"><I size={23}/></span><div><h3>{String(title)}</h3><p>{String(desc)}</p></div></article>})}</div></div></section>
+   <section className="membership section" id="abonementi"><div className="section-heading"><div><h2>Izvēlies abonementu, kas iederas tavā ikdienā.</h2></div><div className="section-intro"><p>No pirmā bezmaksas treniņa līdz neierobežotiem apmeklējumiem, izvēlies sev piemērotāko iespēju.</p><span className="sample-label">4 veidi, kā sākt</span></div></div><PlanCarousel plans={plans} onChoose={choosePlan}/><p className="plans-note"><ShieldCheck size={16}/> Abonementu iegāde būs pieejama drīzumā.</p></section>
+   <section className="section trainers" id="treneri"><div className="section-heading"><div><h2>Atrodi treneri, kurš palīdzēs sasniegt tavus mērķus.</h2></div><p className="section-intro">Izvēlies treniņu virzienu un sazinies ar treneri, lai vienotos par sev piemērotāko laiku.</p></div><div className="trainer-grid">{[
+ {name:'Spēka treniņi',description:'Apgūsti vingrinājumu tehniku un veido treniņu plānu atbilstoši savai pieredzei.',icon:Dumbbell},
+ {name:'Funkcionālie treniņi',description:'Attīsti izturību, koordināciju un kustību kvalitāti ar daudzveidīgiem vingrinājumiem.',icon:Clock3},
+ {name:'Pirmais treniņš',description:'Iepazīsti trenažierus un atrodi sev piemērotu slodzi kopā ar treneri.',icon:UserRound}
+ ].map(({name,description,icon:Icon})=><article className="trainer-card" key={name}><div className="trainer-portrait"><Icon strokeWidth={1}/><span>Individuālie treniņi</span></div><div className="trainer-info"><h3>Jānis</h3><p className="trainer-specialty">{name}</p><p>{description}</p><a className="trainer-phone" href="tel:+37122334455">+371 22 33 44 55</a><button className="btn outline" onClick={()=>{setTrainer(name);setBookingMessage('');setBookingDraft('');setModal(true);}}>Pieteikties treniņam <ArrowUpRight size={17}/></button></div></article>)}</div></section>
+   <section className="section faq-section" id="buj"><div><h2>Uzzini visu svarīgo pirms pirmā treniņa.</h2><p className="muted faq-intro">Atbildes uz biežāk uzdotajiem jautājumiem.</p></div><div className="faqs">{faqs.map(([q,a],i)=><article className={`faq ${faq===i?'expanded':''}`} key={q}><h3><button aria-expanded={faq===i} aria-controls={`faq-${i}`} onClick={()=>setFaq(faq===i?null:i)}>{q}{faq===i?<Minus size={19}/>:<Plus size={19}/>}</button></h3><div id={`faq-${i}`} hidden={faq!==i}><p>{a}</p></div></article>)}</div></section>
+   <section className="final-cta"><div><h2>Atrodi laiku savam nākamajam treniņam.</h2><a className="btn dark-btn" href="#abonementi">Iegādāties abonementu <ArrowUpRight size={20}/></a></div></section>
+  </main>
+  <dialog ref={dialogRef} className="modal" onCancel={()=>setModal(false)} onClick={e=>{if(e.target===e.currentTarget)setModal(false);}} aria-labelledby="modal-title"><button className="modal-close" aria-label="Aizvērt" onClick={()=>setModal(false)}><X/></button><><h2 id="modal-title">Piesaki treniņu sev vēlamajā laikā.</h2><p className="muted">Jānis, {trainer.toLowerCase()}. Izvēlētais laiks ir vēlme, nevis apstiprināta rezervācija.</p><form onChange={()=>{setBookingDraft('');setBookingMessage('');}} onSubmit={e=>{e.preventDefault();const data=new FormData(e.currentTarget);setBookingDraft(`Sveiks, Jāni! Vēlos pieteikties treniņam: ${trainer}. Mans vārds: ${data.get('name')}. E-pasts: ${data.get('email')}. Vēlamais datums: ${data.get('date')}, laiks: ${data.get('time')}. ${data.get('goal') ? `Mērķis: ${data.get('goal')}.` : ''} Lūdzu, apstiprini pieejamību.`);setBookingMessage('Ziņa ir sagatavota. Nosūti to trenerim WhatsApp, lai vienotos par treniņu.');}}><label htmlFor="booking-name">Vārds</label><input id="booking-name" name="name" autoComplete="given-name" required maxLength={100}/><label htmlFor="booking-email">E-pasta adrese</label><input id="booking-email" name="email" type="email" autoComplete="email" required defaultValue={user?.email || ''}/><div className="booking-datetime"><div><label htmlFor="booking-date">Vēlamais datums</label><input id="booking-date" name="date" type="date" min={new Date().toLocaleDateString('sv-SE')} required/></div><div><label htmlFor="booking-time">Vēlamais laiks</label><input id="booking-time" name="time" type="time" required/></div></div><label htmlFor="booking-goal">Ko vēlies sasniegt? (neobligāti)</label><textarea id="booking-goal" name="goal" rows={3} maxLength={1000} placeholder="Piemēram, apgūt pareizu vingrinājumu tehniku"/><p className="booking-note">Sagatavosim ziņu trenerim. Nosūtīšanu apstiprināsi WhatsApp.</p><button className="btn" type="submit">Sagatavot pieteikumu <ArrowUpRight size={17}/></button></form><p className="form-message" role="status">{bookingMessage}</p>{bookingDraft&&<div className="booking-summary"><p>{bookingDraft}</p><a className="btn" href={`https://wa.me/37122334455?text=${encodeURIComponent(bookingDraft)}`} target="_blank" rel="noopener noreferrer">Atvērt WhatsApp <ArrowUpRight size={17}/></a></div>}<a className="trainer-phone booking-call" href="tel:+37122334455">Vai piezvani Jānim: +371 22 33 44 55</a></></dialog>
+ </>;
+}
