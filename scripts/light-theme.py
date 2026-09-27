@@ -11,7 +11,7 @@ PROPS={'color':'text','fill':'text','stroke':'text','caret-color':'text','text-d
  'background':'bg','background-color':'bg',
  'border':'border','border-top':'border','border-right':'border','border-bottom':'border','border-left':'border','border-color':'border',
  'border-top-color':'border','border-bottom-color':'border','border-left-color':'border','border-right-color':'border','outline':'border','outline-color':'border'}
-KEEP_SCOPES=('.hero','.ticker','.gym-visual','.image-label','.final-cta','.gallery','.plan-badge','.mc-badge')
+KEEP_SCOPES=('.hero','.ticker','.gym-visual','.image-label','.final-cta','.gallery','.plan-badge','.mc-badge','.trainer-join-card')
 def parse(c):
     c=c.lstrip('#') if c.startswith('#') else c
     if c.startswith('rgb'):
@@ -106,7 +106,7 @@ manual='''
 :root[data-theme="light"] .membership-card.is-active{background:linear-gradient(160deg,#eef8dc 0%,#ffffff 75%);border-color:#b9d98a}
 :root[data-theme="light"] .gallery .image-label{color:#f4f4ef}
 :root[data-theme="light"] .final-cta>div p{color:#2b3619}
-:root[data-theme="light"] .final-cta .dark-btn{background:#151910;border-color:#151910;color:#fff}
+:root[data-theme="light"] .trainer-join-card .dark-btn,:root[data-theme="light"] .final-cta .dark-btn{background:#151910;border-color:#151910;color:#fff}
 :root[data-theme="light"] .final-cta .dark-btn:hover{background:#2a3420;border-color:#2a3420}
 :root[data-theme="light"] .form-message.error,:root[data-theme="light"] .door-status.error{color:#b42318}
 :root[data-theme="light"] .door-status{color:var(--green-ink)}

@@ -12,7 +12,7 @@ export const faqs: [string, string][] = [
 ];
 faqs.push(['Vai abonementu var atcelt?', 'Jā. Aktīvo abonementu vari atcelt savā profilā sadaļā Mans profils. Pēc atcelšanas ieeja zālē ar šo abonementu vairs nedarbojas.']);
 
-export function Faq({ id = 'buj', title = 'Uzzini visu svarīgo pirms pirmā treniņa.', intro = 'Atbildes uz biežāk uzdotajiem jautājumiem.' }: { id?: string; title?: string; intro?: string }) {
+export function Faq({ id = 'buj', title = 'Biežāk uzdotie jautājumi', intro = 'Viss svarīgais, kas jāzina pirms pirmā treniņa.' }: { id?: string; title?: string; intro?: string }) {
  const [open, setOpen] = useState<number | null>(0);
  return <section className="section faq-section" id={id}>
   <div><h2>{title}</h2><p className="muted faq-intro">{intro}</p></div>
