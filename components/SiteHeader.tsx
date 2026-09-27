@@ -7,11 +7,10 @@ import { ArrowUpRight, Menu, UserRound, X } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
+import { WAZE_URL } from '@/lib/site';
 
-// Temporary destination until the exact address is confirmed.
-export const WAZE_URL = 'https://waze.com/ul?q=Smiltene&navigate=yes';
 
-const links = [['Par mums', '/#par-mums'], ['Abonementi', '/#abonementi'], ['Treneri', '/#treneri'], ['Jautājumi', '/#buj']];
+const links = [['Par mums', '/#par-mums'], ['Abonementi', '/#abonementi'], ['Treneri', '/#treneri'], ['Kontakti', '/kontakti']];
 
 export function SiteHeader() {
  const { ready, user, firstName } = useAuth();
@@ -44,12 +43,12 @@ export function SiteHeader() {
  useEffect(() => { document.body.style.overflow = menu ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [menu]);
 
  return <>
-  <div className="announcement"><span>-20% atlaide skolēniem</span><Link href="/#abonementi">Apskatīt abonementus <ArrowUpRight size={13}/></Link></div>
+  <div className="announcement"><span>Smiltenē atvērta jauna sporta zāle</span><Link href="/registracija?abonements=pirmais-solis">Pirmais treniņš bez maksas <ArrowUpRight size={13}/></Link></div>
   <header className={`header${scrolled ? ' is-scrolled' : ''}`}>
    <Link href="/" className="brand" aria-label="GYM82 sākumlapa"><Logo/></Link>
    <nav className="nav" aria-label="Galvenā navigācija">{links.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}</nav>
    <div className="header-actions">
-    <a className="waze-link" href={WAZE_URL} target="_blank" rel="noopener noreferrer" aria-label="Brauc uz GYM82 ar Waze, Smiltene"><img src="/assets/waze.svg" alt="" width={22} height={22}/><span>Smiltene</span></a>
+    <a className="waze-link" href={WAZE_URL} target="_blank" rel="noopener noreferrer" aria-label="Atrast kartē: brauc uz GYM82 ar Waze"><img src="/assets/waze.png" alt="" width={22} height={22}/><span>Atrast kartē</span></a>
     <ThemeToggle className="header-theme"/>
     <Link aria-label={profileLabel} className={`login-link${user ? ' is-member' : ''}${ready ? '' : ' is-pending'}`} href={profileHref}><UserRound size={16}/><span>{profileLabel}</span></Link>
     <Link className="btn small" href="/#abonementi">Iegādāties abonementu <ArrowUpRight size={16}/></Link>
@@ -59,9 +58,9 @@ export function SiteHeader() {
   <dialog ref={menuRef} id="mobile-menu" className="mobile-drawer" data-open={menu} aria-label="Mobilā izvēlne" onCancel={e => { e.preventDefault(); setMenu(false); }} onClick={e => { if (e.target === e.currentTarget) setMenu(false); }}>
    <div className="drawer-panel">
     <div className="drawer-header"><Logo/><button className="drawer-close" onClick={() => setMenu(false)} aria-label="Aizvērt izvēlni"><X size={25}/></button></div>
-    <nav className="drawer-links" aria-label="Mobilā navigācija">{[...links, ['Kontakti', '/#kontakti']].map(([label, href], index) => <Link className="drawer-reveal" style={{ animationDelay: `${100 + index * 65}ms` }} key={href} href={href} onClick={() => setMenu(false)}>{label}<ArrowUpRight size={23}/></Link>)}</nav>
+    <nav className="drawer-links" aria-label="Mobilā navigācija">{[...links.slice(0, 3), ['Jautājumi', '/#buj'], links[3]].map(([label, href], index) => <Link className="drawer-reveal" style={{ animationDelay: `${100 + index * 65}ms` }} key={href} href={href} onClick={() => setMenu(false)}>{label}<ArrowUpRight size={23}/></Link>)}</nav>
     <div className="drawer-tools drawer-reveal" style={{ animationDelay: '420ms' }}>
-     <a className="waze-link" href={WAZE_URL} target="_blank" rel="noopener noreferrer"><img src="/assets/waze.svg" alt="" width={22} height={22}/><span>Brauc ar Waze: Smiltene</span></a>
+     <a className="waze-link" href={WAZE_URL} target="_blank" rel="noopener noreferrer"><img src="/assets/waze.png" alt="" width={22} height={22}/><span>Atrast kartē</span></a>
      <ThemeToggle withLabel/>
     </div>
     <div className="drawer-actions drawer-reveal" style={{ animationDelay: '480ms' }}>

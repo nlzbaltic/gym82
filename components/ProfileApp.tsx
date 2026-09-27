@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Activity, ArrowUpRight, CalendarCheck, Check, ChevronDown, DoorOpen, Dumbbell, LockKeyhole, LogOut, TicketPercent, UserRound, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPrice, planBySlug, plans, type Plan } from '@/lib/plans';
+import { formatPrice, planBySlug, planName, plans, type Plan } from '@/lib/plans';
 import { useAuth } from './AuthProvider';
 import { PlanCarousel } from './PlanCards';
 
@@ -24,6 +24,9 @@ type Membership = {
 };
 
 const isActive = (m: Membership) => m.status === 'active' && new Date(m.ends_at) > new Date() && (m.visits_limit === null || m.visits_used < m.visits_limit);
+const monthsDative = ['janvārim', 'februārim', 'martam', 'aprīlim', 'maijam', 'jūnijam', 'jūlijam', 'augustam', 'septembrim', 'oktobrim', 'novembrim', 'decembrim'];
+const longDate = (iso: string) => { const d = new Date(iso); return `${d.getDate()}. ${monthsDative[d.getMonth()]}${d.getFullYear() !== new Date().getFullYear() ? ` (${d.getFullYear()})` : ''}`; };
+const daysLeft = (iso: string) => { const d = Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5)); return d === 1 ? 'Atlikusi 1 diena' : `Atlikušas ${d} dienas`; };
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString('lv-LV', { day: 'numeric', month: 'short' });
 const hhmm = (t: string) => t.slice(0, 5);
 const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -67,9 +70,11 @@ export function ProfileApp() {
  const [notice, setNotice] = useState('');
  const buyRef = useRef<HTMLDialogElement>(null);
  const leaving = useRef(false);
+ const cancelRef = useRef<HTMLDialogElement>(null);
+ const [cancelOpen, setCancelOpen] = useState(false);
+ const [cancelBusy, setCancelBusy] = useState(false);
 
  const active = memberships.find(isActive) ?? null;
- const activePlan = planBySlug(active?.plan_slug);
 
  // Not signed in: go to the sign-in page, keeping a chosen plan.
  useEffect(() => {
@@ -106,6 +111,19 @@ export function ProfileApp() {
   const d = buyRef.current;
   if (buying) { if (!d?.open) d?.showModal(); } else d?.close();
  }, [buying]);
+
+ useEffect(() => { const d = cancelRef.current; if (cancelOpen) { if (!d?.open) d?.showModal(); } else d?.close(); }, [cancelOpen]);
+
+ const cancelMembership = async () => {
+  if (!supabase || !active) return;
+  setCancelBusy(true);
+  const { error } = await supabase.rpc('cancel_membership', { p_id: active.id });
+  setCancelBusy(false);
+  setCancelOpen(false);
+  if (error) { setNotice('Neizdevās atcelt abonementu. Lūdzu, mēģini vēlreiz.'); return; }
+  setNotice(`Abonements „${planName(active.plan_slug)}” ir atcelts.`);
+  await load();
+ };
 
  const openBuy = (plan: Plan) => { setBuying(plan); setCode(''); setDiscount(null); setBuyMessage({ text: '', error: false }); };
 
@@ -158,16 +176,37 @@ export function ProfileApp() {
  const visitsLeft = active && active.visits_limit !== null ? active.visits_limit - active.visits_used : null;
 
  return <main className="dashboard app section">
-  <div className="app-bar"><Link className="text-button" href="/"><span aria-hidden="true">←</span> Sākums</Link>{preview ? <span className="app-badge">Profila paraugs</span> : <button className="text-button" onClick={logout}><LogOut size={16}/> Iziet</button>}</div>
+  <div className="app-bar"><Link className="text-button" href="/"><span aria-hidden="true">←</span> Sākums</Link>{preview ? <span className="app-badge">Profila paraugs</span> : <button className="logout-button" onClick={logout}><LogOut size={16}/> Iziet</button>}</div>
   <div className="app-hello"><span className="app-avatar" aria-hidden="true">{(firstName || user?.email || 'G').charAt(0).toUpperCase()}</span><div><h1>{firstName ? `Sveiki, ${firstName}!` : 'Sveiki!'}</h1><p className="muted">{user?.email || 'Šādi izskatīsies tavs profils.'}</p></div></div>
   {notice && <p className="app-toast" role="status"><Check size={16}/> {notice}<button aria-label="Aizvērt" onClick={() => setNotice('')}><X size={16}/></button></p>}
-  <div className="app-tiles">
-   <article className="app-tile"><span className="tile-icon"><Activity size={19}/></span><div><strong className="tile-value">{stats.count}</strong><span className="tile-label">{stats.count === 1 ? 'treniņš' : 'treniņi'} pēdējā gada laikā</span></div></article>
-   <article className="app-tile"><span className="tile-icon"><CalendarCheck size={19}/></span><div><strong className="tile-value">{stats.last ? visitDay(stats.last) : '–'}</strong><span className="tile-label">{stats.last ? `Pēdējais treniņš plkst. ${visitTime(stats.last)}` : 'Pēdējais treniņš'}</span></div></article>
-   <article className={`app-tile tile-member${active ? ' is-active' : ''}`}><span className="tile-icon"><Dumbbell size={19}/></span>{!active && <a href="#abonementi" className="tile-link">Izvēlēties <ArrowUpRight size={14}/></a>}<div>{active ? <><strong className="tile-value small">{activePlan?.name ?? 'Abonements'}</strong><span className="tile-label">{visitsLeft === null ? 'Neierobežoti apmeklējumi' : `Atlikuši ${visitsLeft} no ${active.visits_limit}`} · līdz {shortDate(active.ends_at)}</span><span className="tile-label">Ieeja {hhmm(active.access_start)}–{hhmm(active.access_end)}</span></> : <><strong className="tile-value small">Nav aktīva</strong><span className="tile-label">abonementa</span></>}</div></article>
-   <article className={`app-tile tile-door is-${door.state}`}><span className="tile-icon"><DoorOpen size={19}/></span><div><strong className="tile-value small">Zāles durvis</strong><span className="tile-label">Atver ar pogu, ienākot zālē</span></div><button className="door-button" onClick={openDoor} disabled={door.state === 'busy'}>{door.state === 'busy' ? 'Pārbauda…' : <><LockKeyhole size={16}/> Atvērt durvis</>}</button></article>
+  <div className="app-dash">
+   {active ? <section className="membership-card is-active" aria-label="Aktīvais abonements">
+    <div className="mc-head"><span className="mc-badge"><span className="mc-dot" aria-hidden="true"/> Aktīvs abonements</span><span className="mc-until">Derīgs līdz {longDate(active.ends_at)}</span></div>
+    <h2>{planName(active.plan_slug)}</h2>
+    {active.visits_limit !== null && visitsLeft !== null ? <>
+     <p className="mc-count"><strong>{visitsLeft}</strong><span>{visitsLeft % 10 === 1 && visitsLeft % 100 !== 11 ? 'reize atlikusi' : 'reizes atlikušas'} šajā mēnesī no {active.visits_limit}</span></p>
+     <div className="mc-progress" role="progressbar" aria-valuemin={0} aria-valuemax={active.visits_limit} aria-valuenow={visitsLeft} aria-label="Atlikušās reizes"><span style={{ width: `${(visitsLeft / active.visits_limit) * 100}%` }}/></div>
+    </> : <p className="mc-count"><strong>∞</strong><span>Neierobežoti apmeklējumi</span></p>}
+    <div className="mc-meta"><span>Ieeja {hhmm(active.access_start)}–{hhmm(active.access_end)}</span><span>{daysLeft(active.ends_at)}</span></div>
+    <button className="mc-cancel" onClick={() => setCancelOpen(true)}>Atcelt abonementu</button>
+   </section> : <section className="membership-card is-empty">
+    <span className="mc-badge is-off">Nav aktīva abonementa</span>
+    <h2>Izvēlies abonementu un sāc trenēties.</h2>
+    <p className="muted">Pirmais treniņš ir bez maksas.</p>
+    <a className="btn" href="#abonementi">Izvēlēties abonementu <ArrowUpRight size={17}/></a>
+   </section>}
+   <div className="dash-side">
+    <section className={`entry-card is-${door.state}`}>
+     <div className="entry-top"><span className="tile-icon"><DoorOpen size={19}/></span><div><h2>Ieeja sporta zālē</h2><p className="muted">Nospied pogu pie zāles durvīm.</p></div></div>
+     <button className="door-button" onClick={openDoor} disabled={door.state === 'busy'}>{door.state === 'busy' ? 'Pārbauda…' : <><LockKeyhole size={17}/> Atvērt durvis</>}</button>
+     <p className={`door-status${door.state === 'error' ? ' error' : ''}`} role="status" aria-live="polite">{door.text}</p>
+    </section>
+    <div className="app-tiles">
+     <article className="app-tile"><span className="tile-icon"><Activity size={19}/></span><div><strong className="tile-value">{stats.count}</strong><span className="tile-label">{stats.count === 1 ? 'treniņš' : 'treniņi'} pēdējā gada laikā</span></div></article>
+     <article className="app-tile"><span className="tile-icon"><CalendarCheck size={19}/></span><div><strong className="tile-value">{stats.last ? visitDay(stats.last) : '–'}</strong><span className="tile-label">{stats.last ? `Pēdējais treniņš plkst. ${visitTime(stats.last)}` : 'Pēdējais treniņš'}</span></div></article>
+    </div>
+   </div>
   </div>
-  <p className={`door-status${door.state === 'error' ? ' error' : ''}`} role="status" aria-live="polite">{door.text}</p>
   <p className="app-note">Treniņš tiek uzskaitīts, kad atver zāles durvis. Vairākas atvēršanas vienā dienā skaitās kā viens treniņš.</p>
 
   {!preview && <section className="app-section"><button className="app-row" aria-expanded={detailsOpen} aria-controls="profile-form" onClick={() => setDetailsOpen(!detailsOpen)}><span className="tile-icon"><UserRound size={19}/></span><span><strong>Mani dati</strong><small>{profile?.full_name || 'Pievieno vārdu un telefonu'}</small></span><ChevronDown size={20}/></button>
@@ -176,7 +215,7 @@ export function ProfileApp() {
 
   <section id="abonementi" className="app-section"><div className="app-section-head"><h2>{active ? 'Citi abonementi' : 'Izvēlies abonementu'}</h2><span className="muted">Maksājumi drīzumā</span></div><PlanCarousel plans={plans} onChoose={openBuy} cta="Izvēlēties" currentSlug={active?.plan_slug}/></section>
 
-  {memberships.length > 0 && <section className="app-section"><div className="app-section-head"><h2>Mani abonementi</h2></div><ul className="history">{memberships.map(m => <li key={m.id}><span><strong>{planBySlug(m.plan_slug)?.name ?? m.plan_slug}</strong><small>{shortDate(m.starts_at)} – {shortDate(m.ends_at)}{m.discount_percent ? ` · -${m.discount_percent}%` : ''}</small></span><span className={`history-status${isActive(m) ? ' is-active' : ''}`}>{isActive(m) ? 'Aktīvs' : 'Beidzies'}</span></li>)}</ul></section>}
+  {memberships.length > 0 && <section className="app-section"><div className="app-section-head"><h2>Mani abonementi</h2></div><ul className="history">{memberships.map(m => <li key={m.id}><span><strong>{planName(m.plan_slug)}</strong><small>{shortDate(m.starts_at)} – {shortDate(m.ends_at)}{m.discount_percent ? ` · -${m.discount_percent}%` : ''}</small></span><span className={`history-status${isActive(m) ? ' is-active' : ''}`}>{isActive(m) ? 'Aktīvs' : m.status === 'cancelled' ? 'Atcelts' : 'Beidzies'}</span></li>)}</ul></section>}
 
   <dialog ref={buyRef} className="modal" onCancel={() => setBuying(null)} onClick={e => { if (e.target === e.currentTarget) setBuying(null); }} aria-labelledby="buy-title">
    <button className="modal-close" aria-label="Aizvērt" onClick={() => setBuying(null)}><X/></button>
@@ -185,10 +224,17 @@ export function ProfileApp() {
     <p className="modal-price">{discount ? <><s>{formatPrice(buying.price)} €</s> </> : null}{formatPrice(price)} € <small>{buying.period}</small></p>
     <ul className="plan-features">{buying.features.map(f => <li key={f}><Check size={16}/>{f}</li>)}</ul>
     {buying.price > 0 && <div className="code-row"><label htmlFor="discount-code" className="sr-only">Atlaižu kods</label><TicketPercent size={18} aria-hidden="true"/><input id="discount-code" placeholder="Atlaižu kods" autoCapitalize="characters" value={code} onChange={e => { setCode(e.target.value); setDiscount(null); }}/><button type="button" className="text-button" onClick={applyCode}>Pielietot</button></div>}
-    {active ? <div className="notice"><LockKeyhole size={20}/><p>Tev jau ir aktīvs abonements „{activePlan?.name}”. Jaunu varēsi aktivizēt, kad tas beigsies.</p></div>
+    {active ? <div className="notice"><LockKeyhole size={20}/><p>Tev jau ir aktīvs abonements „{planName(active.plan_slug)}”. Jaunu varēsi aktivizēt, kad tas beigsies.</p></div>
      : <div className="notice"><LockKeyhole size={20}/><p>Tiešsaistes maksājumi vēl nav pieslēgti. Abonements tiks aktivizēts uzreiz, bez maksas.</p></div>}
     <p className={`form-message${buyMessage.error ? ' error' : ''}`} role="status">{buyMessage.text}</p>
     <button className="btn" onClick={activate} disabled={buyBusy || !!active}>{buyBusy ? 'Aktivizē…' : 'Aktivizēt abonementu'} <ArrowUpRight size={17}/></button>
+   </>}
+  </dialog>
+  <dialog ref={cancelRef} className="modal confirm-modal" onCancel={() => setCancelOpen(false)} onClick={e => { if (e.target === e.currentTarget) setCancelOpen(false); }} aria-labelledby="cancel-title">
+   {active && <>
+    <h2 id="cancel-title">Atcelt abonementu „{planName(active.plan_slug)}”?</h2>
+    <p className="muted">Pēc atcelšanas ieeja zālē ar šo abonementu vairs nedarbosies{visitsLeft ? `, un atlikušās ${visitsLeft} reizes vairs nevarēs izmantot` : ''}. Šo darbību nevar atsaukt.</p>
+    <div className="confirm-actions"><button className="btn outline" onClick={() => setCancelOpen(false)}>Nē, paturēt</button><button className="btn danger" onClick={cancelMembership} disabled={cancelBusy}>{cancelBusy ? 'Atceļ…' : 'Jā, atcelt'}</button></div>
    </>}
   </dialog>
  </main>;

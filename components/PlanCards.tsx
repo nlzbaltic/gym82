@@ -5,13 +5,14 @@ import { ArrowUpRight, Check } from 'lucide-react';
 import { formatPrice, type Plan } from '@/lib/plans';
 
 export function PlanCard({ plan, onChoose, cta = 'Iegādāties abonementu', current = false }: { plan: Plan; onChoose: (plan: Plan) => void; cta?: string; current?: boolean }) {
- return <article className={`plan ${plan.featured ? 'featured' : ''}`}>
-  <div className="plan-top"><span className="eyebrow">{plan.name}</span>{current && <span className="plan-current">Tavs abonements</span>}</div>
+ const label = plan.price === 0 && cta === 'Iegādāties abonementu' ? 'Pieteikties bez maksas' : cta;
+ return <article className={`plan ${plan.featured ? 'featured' : ''}${current ? ' is-current' : ''}`}>
+  <div className="plan-top"><span className="eyebrow">{plan.name}</span>{current ? <span className="plan-current">Tavs abonements</span> : plan.badge && <span className="plan-badge">{plan.badge}</span>}</div>
   <div className="price">{formatPrice(plan.price)}<span>€</span><small> / {plan.period}</small></div>
   <p>{plan.description}</p>
   <div className="plan-divider"/>
   <ul className="plan-features">{plan.features.map(f => <li key={f}><Check size={16}/>{f}</li>)}</ul>
-  <button className={`btn ${plan.featured ? '' : 'outline'}`} onClick={() => onChoose(plan)}>{cta} <ArrowUpRight size={17}/></button>
+  {current ? <button className="btn outline" disabled aria-disabled="true"><Check size={17}/> Aktīvs</button> : <button className={`btn ${plan.featured ? '' : 'outline'}`} onClick={() => onChoose(plan)}>{label} <ArrowUpRight size={17}/></button>}
  </article>;
 }
 
