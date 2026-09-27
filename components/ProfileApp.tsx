@@ -155,7 +155,6 @@ export function ProfileApp() {
   setNotice(`Abonements „${buying.name}” ir aktivizēts.`);
   setBuying(null);
   await load();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
  };
 
  const saveProfile = async (e: React.FormEvent) => {
@@ -179,7 +178,8 @@ export function ProfileApp() {
   <div className="app-bar"><Link className="text-button" href="/"><span aria-hidden="true">←</span> Sākums</Link>{preview ? <span className="app-badge">Profila paraugs</span> : <button className="logout-button" onClick={logout}><LogOut size={16}/> Iziet</button>}</div>
   <div className="app-hello"><span className="app-avatar" aria-hidden="true">{(firstName || user?.email || 'G').charAt(0).toUpperCase()}</span><div><h1>{firstName ? `Sveiki, ${firstName}!` : 'Sveiki!'}</h1><p className="muted">{user?.email || 'Šādi izskatīsies tavs profils.'}</p></div></div>
   {notice && <p className="app-toast" role="status"><Check size={16}/> {notice}<button aria-label="Aizvērt" onClick={() => setNotice('')}><X size={16}/></button></p>}
-  <div className="app-dash">
+  {!active && <section id="abonementi" className="app-section plans-first"><div className="app-section-head"><h2>{active ? 'Citi abonementi' : 'Izvēlies abonementu'}</h2><span className="muted">Maksājumi drīzumā</span></div><PlanCarousel plans={plans} onChoose={openBuy} cta="Izvēlēties" currentSlug={active?.plan_slug}/></section>}
+  <div className={`app-dash${active ? '' : ' no-membership'}`}>
    {active ? <section className="membership-card is-active" aria-label="Aktīvais abonements">
     <div className="mc-head"><span className="mc-badge"><span className="mc-dot" aria-hidden="true"/> Aktīvs abonements</span><span className="mc-until">Derīgs līdz {longDate(active.ends_at)}</span></div>
     <h2>{planName(active.plan_slug)}</h2>
@@ -189,12 +189,7 @@ export function ProfileApp() {
     </> : <p className="mc-count"><strong>∞</strong><span>Neierobežoti apmeklējumi</span></p>}
     <div className="mc-meta"><span>Ieeja {hhmm(active.access_start)}–{hhmm(active.access_end)}</span><span>{daysLeft(active.ends_at)}</span></div>
     <button className="mc-cancel" onClick={() => setCancelOpen(true)}>Atcelt abonementu</button>
-   </section> : <section className="membership-card is-empty">
-    <span className="mc-badge is-off">Nav aktīva abonementa</span>
-    <h2>Izvēlies abonementu un sāc trenēties.</h2>
-    <p className="muted">Pirmais treniņš ir bez maksas.</p>
-    <a className="btn" href="#abonementi">Izvēlēties abonementu <ArrowUpRight size={17}/></a>
-   </section>}
+   </section> : null}
    <div className="dash-side">
     <section className={`entry-card is-${door.state}`}>
      <div className="entry-top"><span className="tile-icon"><DoorOpen size={19}/></span><div><h2>Ieeja sporta zālē</h2><p className="muted">Nospied pogu pie zāles durvīm.</p></div></div>
@@ -213,8 +208,9 @@ export function ProfileApp() {
    {detailsOpen && <form id="profile-form" className="profile-form app-form" onSubmit={saveProfile}><label htmlFor="profile-name">Vārds un uzvārds</label><input id="profile-name" autoComplete="name" maxLength={120} value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })}/><label htmlFor="profile-phone">Telefona numurs</label><input id="profile-phone" type="tel" autoComplete="tel" maxLength={30} placeholder="+371" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}/><button className="btn" disabled={formBusy}>{formBusy ? 'Saglabā…' : 'Saglabāt'}</button><p className="form-message" role="status">{formMessage}</p></form>}
   </section>}
 
-  <section id="abonementi" className="app-section"><div className="app-section-head"><h2>{active ? 'Citi abonementi' : 'Izvēlies abonementu'}</h2><span className="muted">Maksājumi drīzumā</span></div><PlanCarousel plans={plans} onChoose={openBuy} cta="Izvēlēties" currentSlug={active?.plan_slug}/></section>
 
+
+  {active && <section id="abonementi" className="app-section"><div className="app-section-head"><h2>{active ? 'Citi abonementi' : 'Izvēlies abonementu'}</h2><span className="muted">Maksājumi drīzumā</span></div><PlanCarousel plans={plans} onChoose={openBuy} cta="Izvēlēties" currentSlug={active?.plan_slug}/></section>}
   {memberships.length > 0 && <section className="app-section"><div className="app-section-head"><h2>Mani abonementi</h2></div><ul className="history">{memberships.map(m => <li key={m.id}><span><strong>{planName(m.plan_slug)}</strong><small>{shortDate(m.starts_at)} – {shortDate(m.ends_at)}{m.discount_percent ? ` · -${m.discount_percent}%` : ''}</small></span><span className={`history-status${isActive(m) ? ' is-active' : ''}`}>{isActive(m) ? 'Aktīvs' : m.status === 'cancelled' ? 'Atcelts' : 'Beidzies'}</span></li>)}</ul></section>}
 
   <dialog ref={buyRef} className="modal" onCancel={() => setBuying(null)} onClick={e => { if (e.target === e.currentTarget) setBuying(null); }} aria-labelledby="buy-title">

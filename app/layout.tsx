@@ -21,7 +21,7 @@ export const viewport: Viewport = { themeColor: '#111212' };
 const themeScript = `(function(){try{var t=localStorage.getItem('gym82-theme');document.documentElement.dataset.theme=t==='light'?'light':'dark';if(t==='light'){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#f5f5f0')}}catch(e){document.documentElement.dataset.theme='dark'}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
- return <html lang="lv" data-theme="dark" className={`${archivo.variable} ${figtree.variable}`} suppressHydrationWarning>
+ return <html lang="lv" data-theme="dark" data-scroll-behavior="smooth" className={`${archivo.variable} ${figtree.variable}`} suppressHydrationWarning>
   <head><script dangerouslySetInnerHTML={{ __html: themeScript }}/></head>
   <body><AuthProvider><SiteHeader/>{children}<SiteFooter/></AuthProvider></body>
  </html>;
