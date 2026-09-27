@@ -101,6 +101,8 @@ manual='''
 :root[data-theme="light"] .hero .btn.outline{color:#f4f4ef;border-color:#ffffffa6;background:transparent}
 :root[data-theme="light"] .hero .btn.outline:hover{background:#ffffff26}
 :root[data-theme="light"] .modal::backdrop,:root[data-theme="light"] .mobile-drawer[data-open="true"]::backdrop{background:#10120e66}
+:root[data-theme="light"] .header.is-scrolled{background:rgba(244,244,239,.86);border-bottom-color:#0000001a}
+:root[data-theme="light"] button:focus-visible,:root[data-theme="light"] a:focus-visible,:root[data-theme="light"] input:focus-visible{outline-color:var(--green-ink)}
 :root[data-theme="light"] .form-message.error,:root[data-theme="light"] .door-status.error{color:#b42318}
 :root[data-theme="light"] .door-status{color:var(--green-ink)}
 :root[data-theme="light"] .app-tile,:root[data-theme="light"] .plan,:root[data-theme="light"] .history,:root[data-theme="light"] .app-row,:root[data-theme="light"] .app-form{box-shadow:0 1px 2px #0000000a,0 8px 24px -16px #00000026}
