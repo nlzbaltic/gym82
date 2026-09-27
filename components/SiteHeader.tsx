@@ -14,7 +14,7 @@ export const WAZE_URL = 'https://waze.com/ul?q=Smiltene&navigate=yes';
 const links = [['Par mums', '/#par-mums'], ['Abonementi', '/#abonementi'], ['Treneri', '/#treneri'], ['Jautājumi', '/#buj']];
 
 export function SiteHeader() {
- const { user, firstName } = useAuth();
+ const { ready, user, firstName } = useAuth();
  const pathname = usePathname();
  const [menu, setMenu] = useState(false);
  const [scrolled, setScrolled] = useState(false);
@@ -51,7 +51,7 @@ export function SiteHeader() {
    <div className="header-actions">
     <a className="waze-link" href={WAZE_URL} target="_blank" rel="noopener noreferrer" aria-label="Brauc uz GYM82 ar Waze, Smiltene"><img src="/assets/waze.svg" alt="" width={22} height={22}/><span>Smiltene</span></a>
     <ThemeToggle className="header-theme"/>
-    <Link aria-label={profileLabel} className={`login-link${user ? ' is-member' : ''}`} href={profileHref}><UserRound size={16}/><span>{profileLabel}</span></Link>
+    <Link aria-label={profileLabel} className={`login-link${user ? ' is-member' : ''}${ready ? '' : ' is-pending'}`} href={profileHref}><UserRound size={16}/><span>{profileLabel}</span></Link>
     <Link className="btn small" href="/#abonementi">Iegādāties abonementu <ArrowUpRight size={16}/></Link>
     <button className="menu-button" aria-label={menu ? 'Aizvērt izvēlni' : 'Atvērt izvēlni'} aria-expanded={menu} aria-controls="mobile-menu" onClick={() => setMenu(!menu)}>{menu ? <X/> : <Menu/>}</button>
    </div>

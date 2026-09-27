@@ -24,7 +24,7 @@ export function ThemeToggle({ withLabel = false, className = '' }: { withLabel?:
  const { theme, toggle } = useTheme();
  const label = theme === 'light' ? 'Ieslēgt tumšo režīmu' : 'Ieslēgt gaišo režīmu';
  return <button type="button" className={`theme-toggle ${className}`} onClick={toggle} aria-label={label} title={label}>
-  {theme === 'light' ? <Moon size={18}/> : <Sun size={18}/>}
-  {withLabel && <span>{theme === 'light' ? 'Tumšais režīms' : 'Gaišais režīms'}</span>}
+  <Sun size={18} className="icon-sun" aria-hidden="true"/><Moon size={18} className="icon-moon" aria-hidden="true"/>
+  {withLabel && <><span className="label-light">Gaišais režīms</span><span className="label-dark">Tumšais režīms</span></>}
  </button>;
 }
